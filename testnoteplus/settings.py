@@ -25,10 +25,20 @@ SECRET_KEY = 'django-insecure-0_t0!alr#*-4(25p=$(a2h4tt_7zv8zfjg&mvj+iz0mr3yhn26
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
+
+LIBRARY_APPS = [
+    'rest_framework',
+    "drf_yasg",
+    'corsheaders',
+]
+DJANOG_APPS = [
+    'account_management',
+
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -37,7 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-]
+] + LIBRARY_APPS+DJANOG_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -80,6 +90,7 @@ DATABASES = {
     }
 }
 
+AUTH_USER_MODEL = 'account_management.UserAccount'
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -98,7 +109,14 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+REST_FRAMEWORK = {
 
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/

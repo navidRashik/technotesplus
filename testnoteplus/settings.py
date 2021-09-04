@@ -37,6 +37,7 @@ LIBRARY_APPS = [
 ]
 DJANOG_APPS = [
     'account_management',
+    'notes',
 
 ]
 

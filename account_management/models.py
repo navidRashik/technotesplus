@@ -17,7 +17,8 @@ class UserManager(BaseUserManager):
         email = self.normalize_email(email)
         username = self.model.normalize_username(username)
         user = self.model(
-            # username=username, email=email,
+            username=username,
+            email=email,
             **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -47,6 +48,8 @@ class UserAccount(AbstractUser):
         ("BLK", "Blacked"),
         ("DEL", "Deleted"),
     ]
+    USERNAME_FIELD = "username"
+
     REQUIRED_FIELDS = []
     status = models.CharField(max_length=25,
                               choices=USERS_IN_STATUS_CHOICES, default='ACT')

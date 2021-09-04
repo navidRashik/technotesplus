@@ -92,6 +92,25 @@ DATABASES = {
 
 AUTH_USER_MODEL = 'account_management.UserAccount'
 
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        },
+        'secret-key': {
+            'type': 'apiKey',
+            'name': 'secret-key',
+            'in': 'header'
+        }
+    },
+    'JSON_EDITOR': True,
+    'PERSIST_AUTH': True,
+    'USE_SESSION_AUTH': False,
+    "LOGIN_URL": "https://api-dev.evaly.com.bd/eauth/api/v1/auth/login",
+    # "REFETCH_SCHEMA_WITH_AUTH": True,
+}
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
@@ -112,7 +131,6 @@ AUTH_PASSWORD_VALIDATORS = [
 REST_FRAMEWORK = {
 
     'DEFAULT_AUTHENTICATION_CLASSES': (
-
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']

@@ -48,4 +48,5 @@ swagger_url = [
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('account_management.urls')),
+    path('api/notes/', include('notes.urls')),
 ]+swagger_url

@@ -29,11 +29,7 @@ class IsNoteOwner(permissions.BasePermission):
         # so we'll always allow GET, HEAD or OPTIONS requests.
         if not bool(request.user and request.user.is_authenticated):
             return False
-
-        return Notes.objects.filter(
-            pk=obj.pk,
-            created_by=request.user).exists()
-
+        return obj.created_by == request.user
 
 class IsNoteReader(permissions.BasePermission):
     """

@@ -57,3 +57,7 @@ class UserAccount(AbstractUser):
 
     # class Meta(AbstractUser.Meta):
     #     swappable = 'AUTH_USER_MODEL'
+    class Meta:
+        indexes = [
+            models.Index(fields=['last_name', 'first_name', 'username']),
+        ]

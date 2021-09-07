@@ -31,6 +31,7 @@ class IsNoteOwner(permissions.BasePermission):
             return False
 
         return Notes.objects.filter(
+            pk=obj.pk,
             created_by=request.user).exists()
 
 
@@ -51,4 +52,7 @@ class IsNoteReader(permissions.BasePermission):
             return False
 
         return Notes.objects.filter(
-            Q(shared_with__pk=request.user.pk) | Q(created_by__pk=request.user.pk)).exists()
+            Q(shared_with__pk=request.user.pk) | Q(
+                created_by__pk=request.user.pk),
+            pk=obj.pk
+        ).exists()

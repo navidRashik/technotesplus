@@ -122,3 +122,17 @@ class ShareNotesViewset(GenericViewSet):
             Q(first_name__icontains=search_params) | Q(last_name__icontains=search_params) | Q(username__icontains=search_params))[:20]
         serializer = UserAccountSerializer(instance=usr, many=True)
         return ResponseWrapper(data=serializer.data, response_success=True, status=200)
+
+
+class MarkAsRead(GenericViewSet):
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter("note_id", openapi.IN_QUERY,
+                          type=openapi.TYPE_INTEGER)
+    ])
+    def create(self, request):
+        note_id = request.query_params.get('note_id')
+        qs = SharedUnseenNotes.objects.filter(
+            shared_to=request.user, note_id=note_id)
+        if qs:
+            qs.delete()
+        return ResponseWrapper(response_success=True, status=200)

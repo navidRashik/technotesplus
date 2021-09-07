@@ -5,7 +5,7 @@ from django.db.models.query_utils import Q
 from django.shortcuts import get_object_or_404
 from utils.response_wrapper import ResponseWrapper
 from notes.serializers import NotesCreateSerializers, NotesDetailSerializers, NotesShortSerializers
-from .models import NoteTag, Notes
+from .models import NoteTag, Notes, SharedUnseenNotes
 from utils.custom_viewset import CustomViewSet
 from rest_framework import permissions, status
 from django.utils.text import slugify
@@ -99,6 +99,16 @@ class ShareNotesViewset(GenericViewSet):
     def update(self, request, *args, **kwargs):
         user_id_list = request.data.get('user_id_list')
         instance = self.get_object()
+        unseen_notes_usr_pk_list = set(user_id_list) - \
+            set(instance.shared_with.values_list('pk', flat=True))
+        obj_list = []
+        for usr_pk in unseen_notes_usr_pk_list:
+            obj_list.append(
+                SharedUnseenNotes(shared_to_id=usr_pk, note=instance)
+            )
+        if unseen_notes_usr_pk_list:
+            SharedUnseenNotes.objects.bulk_create(
+                objs=obj_list, batch_size=len(unseen_notes_usr_pk_list), ignore_conflicts=True)
         instance.shared_with.set(user_id_list)
         return ResponseWrapper(status=200)
 

@@ -24,8 +24,8 @@ class Notes(models.Model):
 
 class SharedUnseenNotes(models.Model):
     shared_to = models.ForeignKey(
-        to="account_management.UserAccount", on_delete=models.CASCADE)
+        to="account_management.UserAccount", on_delete=models.CASCADE, related_name="shared_unseen_notes")
     shared_at = models.DateTimeField(auto_now_add=True)
     note = models.ForeignKey(
-        Notes, on_delete=models.CASCADE, related_name="shared_unseen_notess")
+        Notes, on_delete=models.CASCADE, related_name="shared_unseen_notes")
     notified_owner = models.BooleanField(default=False)

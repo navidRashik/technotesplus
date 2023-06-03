@@ -1,17 +1,20 @@
-from rest_framework.viewsets import GenericViewSet
-from account_management.serializers import UserAccountSerializer
-from django.contrib.auth.models import User
-from django.db.models.query_utils import Q
-from django.shortcuts import get_object_or_404
-from utils.response_wrapper import ResponseWrapper
-from notes.serializers import NotesCreateSerializers, NotesDetailSerializers, NotesShortSerializers
-from .models import NoteTag, Notes, SharedUnseenNotes
-from utils.custom_viewset import CustomViewSet
-from rest_framework import permissions, status
 from django.utils.text import slugify
-from .permissions import *
-from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import permissions
+from rest_framework.viewsets import GenericViewSet
+
+from notes.serializers import (
+    NotesCreateSerializers,
+    NotesDetailSerializers,
+    NotesShortSerializers,
+    ShareNoteSerialzier,
+)
+from utils.custom_viewset import CustomViewSet
+from utils.response_wrapper import CustomRenderer, ResponseWrapper
+
+from .models import Notes, NoteTag, SharedUnseenNotes
+from .permissions import *
 
 
 class NotesViewset(CustomViewSet):
@@ -81,6 +84,9 @@ class ShareNotesViewset(GenericViewSet):
     http_method_names = ['put', 'get']
     queryset = Notes.objects.all()
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ShareNoteSerialzier
+    renderer_classes = [CustomRenderer]
+
 
     def get_permissions(self):
         permission_classes = []
@@ -90,14 +96,10 @@ class ShareNotesViewset(GenericViewSet):
             permission_classes = [permissions.IsAuthenticated]
         return [permission() for permission in permission_classes]
 
-    @swagger_auto_schema(request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            # 'note_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='note_id'),
-            'user_id_list': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.TYPE_INTEGER, description='user_id_list')
-        }))
     def update(self, request, *args, **kwargs):
-        user_id_list = request.data.get('user_id_list')
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user_id_list = serializer.validated_data.get("user_id_list")
         instance = self.get_object()
         unseen_notes_usr_pk_list = set(user_id_list) - \
             set(instance.shared_with.values_list('pk', flat=True))
@@ -112,16 +114,7 @@ class ShareNotesViewset(GenericViewSet):
         instance.shared_with.set(user_id_list)
         return ResponseWrapper(status=200)
 
-    @swagger_auto_schema(manual_parameters=[
-        openapi.Parameter("name", openapi.IN_QUERY,
-                          type=openapi.TYPE_STRING)
-    ])
-    def retrieve(self, request, *args, **kwargs):
-        search_params = request.query_params.get('name')
-        usr = UserAccount.objects.filter(
-            Q(first_name__icontains=search_params) | Q(last_name__icontains=search_params) | Q(username__icontains=search_params))[:20]
-        serializer = UserAccountSerializer(instance=usr, many=True)
-        return ResponseWrapper(data=serializer.data, response_success=True, status=200)
+
 
 
 class MarkAsRead(GenericViewSet):

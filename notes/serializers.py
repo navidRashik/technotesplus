@@ -40,3 +40,5 @@ class NotesCreateSerializers(serializers.ModelSerializer):
         model = Notes
         fields = ['notes', 'title', "tags",
                   ]
+class ShareNoteSerialzier(serializers.Serializer):
+    user_id_list = serializers.ListSerializer(child=serializers.IntegerField())

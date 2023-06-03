@@ -54,3 +54,4 @@ class UserAccountSerializer(serializers.ModelSerializer):
         model = UserAccount
         fields = ['username', 'first_name', "last_name",
                   'id']
+

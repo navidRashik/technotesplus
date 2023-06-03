@@ -1,18 +1,33 @@
-from drf_yasg.utils import swagger_auto_schema
-from rest_framework import serializers, status, viewsets, permissions
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView, TokenRefreshView, TokenVerifyView)
-from .serializers import TokenObtainPairResponseSerializer, TokenRefreshResponseSerializer, TokenVerifyResponseSerializer, UserAccountPatchSerializer, UserAccountSerializer, UserSignupSerializer
-from utils.response_wrapper import ResponseWrapper
-from django.contrib.auth.hashers import make_password
-from account_management.models import UserAccount
 import uuid
+
+from django.contrib.auth.hashers import make_password
+from django.db.models.query_utils import Q
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import permissions, status, viewsets
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenVerifyView,
+)
+
+from account_management.models import UserAccount
+from utils.response_wrapper import ResponseFormatSerializer, ResponseWrapper
+
+from .serializers import (
+    TokenObtainPairResponseSerializer,
+    TokenRefreshResponseSerializer,
+    TokenVerifyResponseSerializer,
+    UserAccountPatchSerializer,
+    UserAccountSerializer,
+    UserSignupSerializer,
+)
 
 
 class DecoratedTokenObtainPairView(TokenObtainPairView):
     @swagger_auto_schema(
         responses={
-            status.HTTP_200_OK: TokenObtainPairResponseSerializer})
+            status.HTTP_200_OK: ResponseFormatSerializer(TokenObtainPairResponseSerializer)})
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
@@ -20,7 +35,7 @@ class DecoratedTokenObtainPairView(TokenObtainPairView):
 class DecoratedTokenRefreshView(TokenRefreshView):
     @swagger_auto_schema(
         responses={
-            status.HTTP_200_OK: TokenRefreshResponseSerializer})
+            status.HTTP_200_OK: ResponseFormatSerializer(TokenRefreshResponseSerializer)})
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
@@ -28,7 +43,7 @@ class DecoratedTokenRefreshView(TokenRefreshView):
 class DecoratedTokenVerifyView(TokenVerifyView):
     @swagger_auto_schema(
         responses={
-            status.HTTP_200_OK: TokenVerifyResponseSerializer})
+            status.HTTP_200_OK: ResponseFormatSerializer(TokenVerifyResponseSerializer)})
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
@@ -60,9 +75,11 @@ class UserAccountManagerViewSet(viewsets.ModelViewSet):
         return self.serializer_class
 
     def get_permissions(self):
-        if self.action == "create" or self.action == "get_otp":
+        if self.action == "create" :
             permission_classes = [permissions.AllowAny]
-        elif self.action in ["retrieve", "update"]:
+        elif self.action in ["retrieve","search_user"]:
+            permission_classes = [permissions.IsAuthenticated]
+        elif self.action in ["update"]:
             permission_classes = [permissions.IsAuthenticated]
         else:
             # permissions.DjangoObjectPermissions.has_permission()
@@ -76,13 +93,11 @@ class UserAccountManagerViewSet(viewsets.ModelViewSet):
             # email = request.data.pop("email", None)
             password = request.data.pop("password")
             username = request.data.get("username")
-            verification_id = uuid.uuid4().__str__()
+            uuid.uuid4().__str__()
         except Exception as e:
             return ResponseWrapper(data=e.args, status=401)
 
         try:
-            # temp_user = User.objects.
-            # email_exist = User.objects.filter(email=email).exists()
             username_exist = UserAccount.objects.filter(
                 username=username).exists()
 
@@ -90,30 +105,25 @@ class UserAccountManagerViewSet(viewsets.ModelViewSet):
                 return ResponseWrapper(
                     data="Please use different username, it’s already been in use", status=400
                 )
+            user=UserAccount.objects.create_user(username=username,password=password,**request.data)
             password = make_password(password=password)
             user = UserAccount.objects.create(
-                # email=email,
                 password=password,
-                # verification_id=verification_id,
                 **request.data
             )
-            # if user is None:
-            #     return ResponseWrapper(data="Account already exist with given Email or Phone", status=401)
-        except Exception as err:
-            # logger.exception(msg="error while account cration")
+        except Exception:
             return ResponseWrapper(
                 data="Account creation failed", status=401
             )
 
-        # send_registration_confirmation_email(email)
         user_serializer = UserAccountSerializer(instance=user, many=False)
         return ResponseWrapper(data=user_serializer.data, status=200)
 
     def update(self, request, *args, **kwargs):
         password = request.data.pop("password", None)
         user_qs = UserAccount.objects.filter(pk=request.user.pk)
-        first_name = request.data.get('first_name')
-        last_name = request.data.get('last_name')
+        request.data.get('first_name')
+        request.data.get('last_name')
 
         # if user_qs:
         if password:
@@ -136,6 +146,16 @@ class UserAccountManagerViewSet(viewsets.ModelViewSet):
             return ResponseWrapper(data=user_serializer.data, status=200)
         else:
             return ResponseWrapper(data={}, status=status.HTTP_204_NO_CONTENT)
+    
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter("name", openapi.IN_QUERY,
+                        type=openapi.TYPE_STRING)
+    ])
+    def search_user(self, request, *args, **kwargs):
+        search_params = request.query_params.get('name')
+        usr = UserAccount.objects.get_user_suggestions(search_params)
+        serializer = UserAccountSerializer(instance=usr, many=True)
+        return ResponseWrapper(data=serializer.data, response_success=True, status=200)
 
     def destroy(self, request, *args, **kwargs):
         if request.user is not None:
@@ -149,15 +169,4 @@ class UserAccountManagerViewSet(viewsets.ModelViewSet):
                 return ResponseWrapper(data=user_serializer.data, status=200)
         return ResponseWrapper(data="Active account not found", status=400)
 
-    # def get_otp(self, request, phone, *args, **kwargs):
-    #     otp = random.randint(1000, 9999)
-    #     otp_qs, _ = OtpUser.objects.get_or_create(phone=str(phone))
-    #     if request.user.pk:
-    #         otp_qs.user = request.user
-    #     otp_qs.otp_code = otp
-    #     otp_qs.save()
 
-    #     if send_sms(body=f'Your OTP code for I-HOST is {otp} . Thanks for using I-HOST.', phone=str(phone)):
-    #         return ResponseWrapper(msg='otp sent', data={'name': None, 'id': None, 'phone': phone}, status=200)
-    #     else:
-    #         return ResponseWrapper(error_msg='otp sending failed')

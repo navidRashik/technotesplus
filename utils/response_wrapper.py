@@ -60,19 +60,26 @@ class CustomRenderer(JSONRenderer):
             response_success = response.status_text
             msg = response.status_text
 
-            # response parse
-            pagination = {
-                "count": None,
-                "next": None,
-                "previous": None
-            }
+            # # response parse
+            # pagination = {
+            #     "count": None,
+            #     "next": None,
+            #     "previous": None
+            # }
 
             output_data = {
                 "error": {"code": error_code, "error_details": error_msg},
-                "pagination": pagination,
+                # "pagination": pagination,
                 "data": None,
                 "status": False,
                 "msg": msg if msg else str(error_msg) if error_msg else "Success" if response_success else "Failed",
             }
             return super().render(output_data, accepted_media_type, renderer_context)
-        return super().render(data, accepted_media_type, renderer_context)
+        else:
+            output_data = {
+                "error": {"code": None, "error_details": None},
+                "data": data,
+                "status": True,
+                "msg":  "Success",
+            }
+        return super().render(output_data, accepted_media_type, renderer_context)

@@ -1,9 +1,24 @@
+from rest_framework import serializers
+from rest_framework.fields import empty
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 
+class ErrorResponseSerializer(serializers.Serializer):
+    error = serializers.CharField()
+    error_detail = serializers.CharField()
+
+class ResponseFormatSerializer(serializers.Serializer):
+    error = ErrorResponseSerializer()
+    data = serializers.DictField()
+    status = serializers.CharField()
+    msg = serializers.CharField()
+    def __init__(self, instance=None, data=empty,data_field=None, **kwargs):
+        super(ResponseFormatSerializer, self).__init__(instance=instance,data=data,**kwargs)
+        if data_field is not None:
+            self.fields['data'] = data_field()
 class ResponseWrapper(Response):
 
-    def __init__(self, data=None, error_code=None, template_name=None, headers=None, exception=False, content_type=None,
+    def __init__(self, data={}, error_code=None, template_name=None, headers=None, exception=False, content_type=None,
                  error_msg=None, msg=None, response_success=True, status=None, data_type=None):
         """
         Alters the init arguments slightly.
@@ -56,9 +71,9 @@ class CustomRenderer(JSONRenderer):
             if isinstance(data, list):
                 error_msg = str(data)
             else:
-                error_msg = data.get("detail")
+                error_msg = data
             response_success = response.status_text
-            msg = response.status_text
+            msg = error_msg.__str__()
 
             # # response parse
             # pagination = {
@@ -70,7 +85,7 @@ class CustomRenderer(JSONRenderer):
             output_data = {
                 "error": {"code": error_code, "error_details": error_msg},
                 # "pagination": pagination,
-                "data": None,
+                "data": {},
                 "status": False,
                 "msg": msg if msg else str(error_msg) if error_msg else "Success" if response_success else "Failed",
             }

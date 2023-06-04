@@ -63,7 +63,14 @@ services:
             - celery
 
     redis:
-        image: redis:6-alpine
+        restart: always
+        image: redis:5-alpine
+        # expose:
+        #   - "6379"
+        ports:
+            - "6379:6379"
+        healthcheck:
+            test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
 
     # elasticsearch:
     #     container_name: es-container

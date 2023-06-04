@@ -119,6 +119,21 @@ class CustomRenderer(JSONRenderer):
             and "status" in data
         ):
             return super().render(data, accepted_media_type, renderer_context)
+        elif (
+            isinstance(data, dict)
+            and "next" in data
+            and "previous" in data
+            and "count" in data
+            and "results" in data
+        ):
+            output_data = {
+                "error": {"code": None, "error_details": None},
+                "data": data.pop("results"),
+                "pagination": data,
+                "status": True,
+                "msg": "Success",
+            }
+            return super().render(output_data, accepted_media_type, renderer_context)
         else:
             output_data = {
                 "error": {"code": None, "error_details": None},

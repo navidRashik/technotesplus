@@ -104,7 +104,9 @@ class ShareNotesViewset(GenericViewSet):
         unseen_notes_usr_pk_list = set(user_id_list) - set(
             instance.shared_with.values_list("pk", flat=True)
         )
-        save_shared_note.delay(user_id_list, instance, unseen_notes_usr_pk_list)
+        save_shared_note.delay(
+            user_id_list, instance.pk, list(unseen_notes_usr_pk_list)
+        )
         return Response(status=status.HTTP_200_OK)
 
 

@@ -90,11 +90,8 @@ class CustomRenderer(JSONRenderer):
         response = renderer_context["response"]
 
         # if response.status_code == 401 or response.status_code == 405 or response.status_code == 403:
-        if (
-            "error" not in data
-            and response.status_code >= 400
-            and response.status_code < 500
-        ):
+
+        if response.status_code >= 400 and response.status_code < 500:
             # error
             error_code = response.status_code
             if isinstance(data, list):
@@ -115,7 +112,12 @@ class CustomRenderer(JSONRenderer):
                 "msg": msg,
             }
             return super().render(output_data, accepted_media_type, renderer_context)
-        elif "error" in data and "data" in data and "status" in data:
+        elif (
+            isinstance(data, dict)
+            and "error" in data
+            and "data" in data
+            and "status" in data
+        ):
             return super().render(data, accepted_media_type, renderer_context)
         else:
             output_data = {

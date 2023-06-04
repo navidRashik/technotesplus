@@ -5,22 +5,25 @@ services:
     db:
         image: postgres:13-alpine
         environment:
-            - POSTGRES_USER=${DB_USER}
-            - POSTGRES_PASSWORD=${DB_PASSWORD}
-            - POSTGRES_DB=${DB_NAME}
+            - POSTGRES_USER=${DATABASE_USER}
+            - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+            - POSTGRES_DB=${DATABASE_NAME}
         volumes:
             - prod_postgres_data:/var/lib/postgresql/data/
         restart: always
     web:
+        # for prod must use this: gunicorn technotesplus.asgi:application -w 1 -k uvicorn.workers.UvicornWorker -b [::]:8000"
         image: technotes
         build:
             context: .
             dockerfile: Dockerfile
         command: >
             bash -c "python3 manage.py migrate
-            && gunicorn technotesplus.asgi:application -w 1 -k uvicorn.workers.UvicornWorker -b [::]:8000"
+            && python manage.py collectstatic --noinput
+            && python manage.py runserver [::]:8000"
         volumes:
             - .:/app
+            - ./static:/usr/src/app/static
         ports:
             - "8000:8000"
         depends_on:
@@ -34,11 +37,11 @@ services:
         #   restart_policy:
         #     condition: on-failure
 
-    celery:
+    worker:
         build:
             context: .
             dockerfile: Dockerfile
-        command: celery --app=technotesplus worker --loglevel=info
+        command: bash -c "celery -A technotesplus worker -l INFO"
         volumes:
             - .:/app
         environment:
@@ -48,19 +51,19 @@ services:
             - web
             - redis
 
-    flower:
-        image: mher/flower
-        container_name: flower
-        command: celery flower --persisten=True
-        environment:
-            - CELERY_BROKER_URL=redis://redis:6379/0
-            - FLOWER_PORT=5566
-        ports:
-            - 5566:5566
-        volumes:
-            - flower_data:/data
-        depends_on:
-            - celery
+    # flower:
+    #     image: mher/flower
+    #     container_name: flower
+    #     command: celery flower --persisten=True
+    #     environment:
+    #         - CELERY_BROKER_URL=redis://redis:6379/0
+    #         - FLOWER_PORT=5566
+    #     ports:
+    #         - 5566:5566
+    #     volumes:
+    #         - flower_data:/data
+    #     depends_on:
+    #         - worker
 
     redis:
         restart: always

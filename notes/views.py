@@ -4,6 +4,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+from jobs.tasks import save_shared_note
 
 from notes.serializers import (
     NotesCreateSerializers,
@@ -102,17 +103,10 @@ class ShareNotesViewset(GenericViewSet):
         unseen_notes_usr_pk_list = set(user_id_list) - set(
             instance.shared_with.values_list("pk", flat=True)
         )
-        obj_list = []
-        for usr_pk in unseen_notes_usr_pk_list:
-            obj_list.append(SharedUnseenNotes(shared_to_id=usr_pk, note=instance))
-        if unseen_notes_usr_pk_list:
-            SharedUnseenNotes.objects.bulk_create(
-                objs=obj_list,
-                batch_size=len(unseen_notes_usr_pk_list),
-                ignore_conflicts=True,
-            )
-        instance.shared_with.set(user_id_list)
+        save_shared_note.delay(user_id_list, instance, unseen_notes_usr_pk_list)
         return Response(status=status.HTTP_200_OK)
+    
+    
 
 
 class MarkAsRead(GenericViewSet):

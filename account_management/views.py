@@ -103,7 +103,7 @@ class UserAccountManagerViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         try:
             password = serializer.validated_data.pop("password")
-            username = serializer.validated_data.pop("username")
+            username = serializer.validated_data.get("username")
         except Exception as e:
             return Response(data=e.args, status=401, exception=True)
         try:
@@ -115,8 +115,8 @@ class UserAccountManagerViewSet(viewsets.ModelViewSet):
                     exception=True,
                 )
             password = make_password(password=password)
-            user = UserAccount.objects.create_user(
-                username=username, password=password, **serializer.validated_data
+            user = UserAccount.objects.create(
+                password=password, **serializer.validated_data
             )
             # user = UserAccount.objects.create(password=password, **request.data)
         except Exception as e:

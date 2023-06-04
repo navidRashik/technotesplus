@@ -1,4 +1,4 @@
-from notes.models import Notes
+from notes.models import NotePrivacyType, Notes
 from django.db.models import Q
 from account_management.models import UserAccount
 from rest_framework import permissions
@@ -19,7 +19,8 @@ class IsNoteOwner(permissions.BasePermission):
     Object-level permission to only allow owners of an object to edit it.
     Assumes the model instance has an `owner` attribute.
     """
-    message = 'Not the Note owner.'
+
+    message = "Not the Note owner."
 
     def has_permission(self, request, view):
         return bool(request.user and request.user.is_authenticated)
@@ -31,12 +32,14 @@ class IsNoteOwner(permissions.BasePermission):
             return False
         return obj.created_by == request.user
 
+
 class IsNoteReader(permissions.BasePermission):
     """
     Object-level permission to only allow owners of an object to edit it.
     Assumes the model instance has an `owner` attribute.
     """
-    message = 'Not the Note owner.'
+
+    message = "Not the Note owner."
 
     def has_permission(self, request, view):
         return bool(request.user and request.user.is_authenticated)
@@ -48,7 +51,8 @@ class IsNoteReader(permissions.BasePermission):
             return False
 
         return Notes.objects.filter(
-            Q(shared_with__pk=request.user.pk) | Q(
-                created_by__pk=request.user.pk),
-            pk=obj.pk
+            Q(note_privacy_type=NotePrivacyType.PUBLIC)
+            | Q(shared_with__pk=request.user.pk)
+            | Q(created_by__pk=request.user.pk),
+            pk=obj.pk,
         ).exists()

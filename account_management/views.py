@@ -10,7 +10,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView,
 )
-
+from rest_framework.response import Response
 from account_management.models import UserAccount
 from utils.response_wrapper import ResponseFormatSerializer, ResponseWrapper
 
@@ -27,7 +27,11 @@ from .serializers import (
 class DecoratedTokenObtainPairView(TokenObtainPairView):
     @swagger_auto_schema(
         responses={
-            status.HTTP_200_OK: ResponseFormatSerializer(TokenObtainPairResponseSerializer)})
+            status.HTTP_200_OK: ResponseFormatSerializer(
+                TokenObtainPairResponseSerializer
+            )
+        }
+    )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
@@ -35,7 +39,9 @@ class DecoratedTokenObtainPairView(TokenObtainPairView):
 class DecoratedTokenRefreshView(TokenRefreshView):
     @swagger_auto_schema(
         responses={
-            status.HTTP_200_OK: ResponseFormatSerializer(TokenRefreshResponseSerializer)})
+            status.HTTP_200_OK: ResponseFormatSerializer(TokenRefreshResponseSerializer)
+        }
+    )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
@@ -43,7 +49,9 @@ class DecoratedTokenRefreshView(TokenRefreshView):
 class DecoratedTokenVerifyView(TokenVerifyView):
     @swagger_auto_schema(
         responses={
-            status.HTTP_200_OK: ResponseFormatSerializer(TokenVerifyResponseSerializer)})
+            status.HTTP_200_OK: ResponseFormatSerializer(TokenVerifyResponseSerializer)
+        }
+    )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
@@ -75,9 +83,9 @@ class UserAccountManagerViewSet(viewsets.ModelViewSet):
         return self.serializer_class
 
     def get_permissions(self):
-        if self.action == "create" :
+        if self.action == "create":
             permission_classes = [permissions.AllowAny]
-        elif self.action in ["retrieve","search_user"]:
+        elif self.action in ["retrieve", "search_user"]:
             permission_classes = [permissions.IsAuthenticated]
         elif self.action in ["update"]:
             permission_classes = [permissions.IsAuthenticated]
@@ -93,37 +101,34 @@ class UserAccountManagerViewSet(viewsets.ModelViewSet):
             # email = request.data.pop("email", None)
             password = request.data.pop("password")
             username = request.data.get("username")
-            uuid.uuid4().__str__()
         except Exception as e:
-            return ResponseWrapper(data=e.args, status=401)
+            return Response(data=e.args, status=401, exception=True)
 
         try:
-            username_exist = UserAccount.objects.filter(
-                username=username).exists()
+            username_exist = UserAccount.objects.filter(username=username).exists()
 
             if username_exist:
-                return ResponseWrapper(
-                    data="Please use different username, it’s already been in use", status=400
+                return Response(
+                    data="Please use different username, it’s already been in use",
+                    status=400,
+                    exception=True,
                 )
-            user=UserAccount.objects.create_user(username=username,password=password,**request.data)
+            user = UserAccount.objects.create_user(
+                username=username, password=password, **request.data
+            )
             password = make_password(password=password)
-            user = UserAccount.objects.create(
-                password=password,
-                **request.data
-            )
+            user = UserAccount.objects.create(password=password, **request.data)
         except Exception:
-            return ResponseWrapper(
-                data="Account creation failed", status=401
-            )
+            return Response(data="Account creation failed", status=401, exception=True)
 
         user_serializer = UserAccountSerializer(instance=user, many=False)
-        return ResponseWrapper(data=user_serializer.data, status=200)
+        return Response(data=user_serializer.data, status=200)
 
     def update(self, request, *args, **kwargs):
         password = request.data.pop("password", None)
         user_qs = UserAccount.objects.filter(pk=request.user.pk)
-        request.data.get('first_name')
-        request.data.get('last_name')
+        request.data.get("first_name")
+        request.data.get("last_name")
 
         # if user_qs:
         if password:
@@ -132,11 +137,12 @@ class UserAccountManagerViewSet(viewsets.ModelViewSet):
         else:
             updated = user_qs.update(**request.data)
         if not updated:
-            return ResponseWrapper(error_code=status.HTTP_400_BAD_REQUEST, error_msg=['failed to update'])
+            return ResponseWrapper(
+                error_code=status.HTTP_400_BAD_REQUEST, error_msg=["failed to update"]
+            )
         # is_apps = request.path.__contains__('/apps/')
 
-        user_serializer = UserAccountSerializer(
-            instance=user_qs.first(), many=False)
+        user_serializer = UserAccountSerializer(instance=user_qs.first(), many=False)
         return ResponseWrapper(data=user_serializer.data, status=200)
 
     def retrieve(self, request, *args, **kwargs):
@@ -146,16 +152,17 @@ class UserAccountManagerViewSet(viewsets.ModelViewSet):
             return ResponseWrapper(data=user_serializer.data, status=200)
         else:
             return ResponseWrapper(data={}, status=status.HTTP_204_NO_CONTENT)
-    
-    @swagger_auto_schema(manual_parameters=[
-        openapi.Parameter("name", openapi.IN_QUERY,
-                        type=openapi.TYPE_STRING)
-    ])
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter("name", openapi.IN_QUERY, type=openapi.TYPE_STRING)
+        ]
+    )
     def search_user(self, request, *args, **kwargs):
-        search_params = request.query_params.get('name')
+        search_params = request.query_params.get("name")
         usr = UserAccount.objects.get_user_suggestions(search_params)
         serializer = UserAccountSerializer(instance=usr, many=True)
-        return ResponseWrapper(data=serializer.data, response_success=True, status=200)
+        return Response(data=serializer.data, status=200)
 
     def destroy(self, request, *args, **kwargs):
         if request.user is not None:
@@ -168,5 +175,3 @@ class UserAccountManagerViewSet(viewsets.ModelViewSet):
             if user_serializer.is_valid():
                 return ResponseWrapper(data=user_serializer.data, status=200)
         return ResponseWrapper(data="Active account not found", status=400)
-
-

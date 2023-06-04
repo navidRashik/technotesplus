@@ -7,7 +7,7 @@ from django.db.models.query_utils import Q
 from django.db.models.query_utils import Q
 
 class UserManager(usrmgr):
-    def get_user_suggestions(search_params):
+    def get_user_suggestions(self,search_params):
         return UserAccount.objects.filter(
             Q(first_name__icontains=search_params) | 
             Q(last_name__icontains=search_params) | 

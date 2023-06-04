@@ -179,8 +179,6 @@ SIMPLE_JWT = {
         minutes=int(os.getenv("JWT_REFRESH_TOKEN_LIFETIME"))
     ),
     "ALGORITHM": os.getenv("JWT_ALGORITHM"),
-    "SIGNING_KEY": os.getenv("JWT_SIGNING_KEY"),
-    "AUTH_HEADER_TYPES": (os.getenv("JWT_AUTH_HEADER_TYPES"),),
 }
 
 # celery configurations

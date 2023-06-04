@@ -1,17 +1,16 @@
 import logging
-import uuid
 
 from django.contrib.auth.hashers import make_password
-from django.db.models.query_utils import Q
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import permissions, status, viewsets
+from rest_framework.response import Response
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
     TokenVerifyView,
 )
-from rest_framework.response import Response
+
 from account_management.models import UserAccount
 from utils.response_wrapper import ResponseFormatSerializer, ResponseWrapper
 

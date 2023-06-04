@@ -54,18 +54,15 @@ class ResponseWrapper(Response):
                 status_by_default_for_gz = status
         if error_code is not None:
             response_success = False
-
+        if isinstance(error_msg, dict) and error_msg.get("detail") is not None:
+            msg = error_msg.get("detail")
+        else:
+            msg = error_msg.__str__()
         output_data = {
             "error": {"code": error_code, "error_details": error_msg},
             "data": data,
             "status": response_success,
-            "msg": msg
-            if msg
-            else str(error_msg)
-            if error_msg
-            else "Success"
-            if response_success
-            else "Failed",
+            "msg": msg,
         }
         if data_type is not None:
             output_data["type"] = data_type
@@ -109,13 +106,6 @@ class CustomRenderer(JSONRenderer):
                 msg = error_msg.get("detail")
             else:
                 msg = error_msg.__str__()
-
-            # # response parse
-            # pagination = {
-            #     "count": None,
-            #     "next": None,
-            #     "previous": None
-            # }
 
             output_data = {
                 "error": {"code": error_code, "error_details": error_msg},

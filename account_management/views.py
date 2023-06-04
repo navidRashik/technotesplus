@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from django.contrib.auth.hashers import make_password
@@ -22,6 +23,8 @@ from .serializers import (
     UserAccountSerializer,
     UserSignupSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class DecoratedTokenObtainPairView(TokenObtainPairView):
@@ -97,28 +100,28 @@ class UserAccountManagerViewSet(viewsets.ModelViewSet):
     queryset = UserAccount.objects.exclude(status="DEL")
 
     def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         try:
-            # email = request.data.pop("email", None)
-            password = request.data.pop("password")
-            username = request.data.get("username")
+            password = serializer.validated_data.pop("password")
+            username = serializer.validated_data.pop("username")
         except Exception as e:
             return Response(data=e.args, status=401, exception=True)
-
         try:
             username_exist = UserAccount.objects.filter(username=username).exists()
-
             if username_exist:
                 return Response(
                     data="Please use different username, it’s already been in use",
                     status=400,
                     exception=True,
                 )
-            user = UserAccount.objects.create_user(
-                username=username, password=password, **request.data
-            )
             password = make_password(password=password)
-            user = UserAccount.objects.create(password=password, **request.data)
-        except Exception:
+            user = UserAccount.objects.create_user(
+                username=username, password=password, **serializer.validated_data
+            )
+            # user = UserAccount.objects.create(password=password, **request.data)
+        except Exception as e:
+            logger.error("Account creation failed", e.args)
             return Response(data="Account creation failed", status=401, exception=True)
 
         user_serializer = UserAccountSerializer(instance=user, many=False)

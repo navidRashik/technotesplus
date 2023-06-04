@@ -3,7 +3,8 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import permissions, status
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import GenericViewSet, ViewSetMixin
+from rest_framework.views import APIView
 from jobs.tasks import save_shared_note
 
 from notes.serializers import (
@@ -105,11 +106,11 @@ class ShareNotesViewset(GenericViewSet):
         )
         save_shared_note.delay(user_id_list, instance, unseen_notes_usr_pk_list)
         return Response(status=status.HTTP_200_OK)
-    
-    
 
 
-class MarkAsRead(GenericViewSet):
+class MarkAsRead(ViewSetMixin, APIView):
+    permission_classes = [IsNoteReader]
+
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter("note_id", openapi.IN_QUERY, type=openapi.TYPE_INTEGER)

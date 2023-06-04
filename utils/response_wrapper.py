@@ -105,9 +105,8 @@ class CustomRenderer(JSONRenderer):
             else:
                 error_msg = data
             response_success = response.status_text
-            if isinstance(error_msg, dict):
-                if error_msg.get("detail") is not None:
-                    msg = error_msg.get("detail")
+            if isinstance(error_msg, dict) and error_msg.get("detail") is not None:
+                msg = error_msg.get("detail")
             else:
                 msg = error_msg.__str__()
 
@@ -123,13 +122,7 @@ class CustomRenderer(JSONRenderer):
                 # "pagination": pagination,
                 "data": {},
                 "status": False,
-                "msg": msg
-                if msg
-                else str(error_msg)
-                if error_msg
-                else "Success"
-                if response_success
-                else "Failed",
+                "msg": msg,
             }
             return super().render(output_data, accepted_media_type, renderer_context)
         elif "error" in data and "data" in data and "status" in data:

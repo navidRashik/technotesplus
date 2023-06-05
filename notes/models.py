@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from utils.base import BaseModel
+from langdetect import detect
 
 
 class NotePrivacyType(models.TextChoices):
@@ -37,6 +38,10 @@ class Notes(BaseModel):
     note_privacy_type = models.CharField(
         max_length=20, choices=NotePrivacyType.choices, default=NotePrivacyType.PRIVATE
     )
+
+    @property
+    def language(self):
+        return detect(self.notes)
 
 
 class SharedUnseenNotes(models.Model):

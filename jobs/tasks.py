@@ -3,7 +3,7 @@ from celery import shared_task
 
 
 @shared_task
-def save_shared_note(user_id_list, note_id, unseen_notes_usr_pk_list):
+def save_shared_note(user_id_list: list, note_id: int, unseen_notes_usr_pk_list: list):
     if not unseen_notes_usr_pk_list:
         return
     obj_list = []

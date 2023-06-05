@@ -16,8 +16,8 @@ from notes.serializers import (
 from utils.custom_viewset import CustomViewSet
 from utils.response_wrapper import CustomRenderer, ResponseWrapper
 
-from .models import Notes, NoteTag, SharedUnseenNotes
-from .permissions import *
+from notes.models import Notes, NoteTag, SharedUnseenNotes
+from notes.permissions import *
 
 
 class NotesViewset(CustomViewSet):

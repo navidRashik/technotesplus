@@ -17,6 +17,12 @@ class NoteTag(models.Model):
 
 
 class Notes(BaseModel):
+    """
+    this model keeps the notes and if private then it will also keep track if
+    any other user was given permission to watch this note or not if allowed
+    then thats also tracked in shared_with column.
+    """
+
     notes = models.TextField(null=True, blank=True)
     title = models.CharField(max_length=255, null=True, blank=True)
     tags = models.ManyToManyField(NoteTag, blank=True, related_name="notes")
@@ -34,6 +40,11 @@ class Notes(BaseModel):
 
 
 class SharedUnseenNotes(models.Model):
+    """
+    the purpose of this model is to keep track of unseen notes that are shared
+    by the author. This model can be utilized for notification as well.
+    """
+
     shared_to = models.ForeignKey(
         to="account_management.UserAccount",
         on_delete=models.CASCADE,

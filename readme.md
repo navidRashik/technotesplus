@@ -23,11 +23,17 @@ http://127.0.0.1:8000/redoc/
 
 ## things added
 
-drf, celery shared task
+- drf
+- celery shared task
+- chaching using cacheops
 
 ## things to add
 
-will add testing, signals, caching, message broker, django-channel usage and other useful drf features.
+- testing,
+- signals,
+- message broker,
+- django-channel usage
+- other useful drf features.
 
 if you run the project and go to
 127.0.0.1:8000/swagger.json

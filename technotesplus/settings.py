@@ -38,6 +38,7 @@ LIBRARY_APPS = [
     "rest_framework",
     "drf_yasg",
     "corsheaders",
+    "cacheops",
 ]
 DJANOG_APPS = [
     "account_management",
@@ -189,3 +190,13 @@ SIMPLE_JWT = {
 # celery configurations
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
+
+CACHEOPS_REDIS = os.getenv('CACHEOPS_REDIS')
+
+CACHEOPS_TIMEOUT_MINUTES = 60
+
+CACHEOPS = {
+    '*.*': {'timeout': CACHEOPS_TIMEOUT_MINUTES * 60},
+}
+
+CACHEOPS_ENABLED = True

@@ -54,3 +54,6 @@ class CustomViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return ResponseWrapper(serializer.data)
+
+    def get_queryset(self):
+        return super().get_queryset().cache()

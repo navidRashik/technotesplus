@@ -8,10 +8,10 @@ this is a note keeping app with limited functionality of keeping private/pbulic 
 
 ## How to run it
 
-need docker in your environment. pls download it before running.
+need docker in your environment. pls download it before running. run command:
 
 ```
-docker-compose up
+make run_dev
 ```
 
 after running the please look into flowing link for documentation
@@ -26,10 +26,10 @@ http://127.0.0.1:8000/redoc/
 - drf
 - celery shared task
 - chaching using cacheops
+- testing
 
 ## things to add
 
-- testing,
 - signals,
 - message broker,
 - django-channel usage

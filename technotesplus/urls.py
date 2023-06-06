@@ -26,7 +26,7 @@ from django.conf.urls import url
 schema_view = get_schema_view(
     openapi.Info(
         title="Snippets API",
-        default_version='v1',
+        default_version="v1",
         description="Test description",
         terms_of_service="https://www.google.com/policies/terms/",
         contact=openapi.Contact(email="contact@snippets.local"),
@@ -37,16 +37,38 @@ schema_view = get_schema_view(
 )
 
 swagger_url = [
-    url(r'^swagger(?P<format>\.json|\.yaml)$',
-        schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    url(r'^swagger/$', schema_view.with_ui('swagger',
-                                           cache_timeout=0), name='schema-swagger-ui'),
-    url(r'^redoc/$', schema_view.with_ui('redoc',
-                                         cache_timeout=0), name='schema-redoc'),
-
+    url(
+        r"^swagger(?P<format>\.json|\.yaml)$",
+        schema_view.without_ui(cache_timeout=0),
+        name="schema-json",
+    ),
+    url(
+        r"^swagger/$",
+        schema_view.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui",
+    ),
+    url(
+        r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"
+    ),
 ]
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/auth/', include('account_management.urls')),
-    path('api/notes/', include('notes.urls')),
-]+swagger_url + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns = (
+    [
+        path("admin/", admin.site.urls),
+        path(
+            "api/auth/",
+            include(
+                "account_management.urls",
+            ),
+            name="auth",
+        ),
+        path(
+            "api/notes/",
+            include(
+                "notes.urls",
+            ),
+            name="note_root",
+        ),
+    ]
+    + swagger_url
+    + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+)

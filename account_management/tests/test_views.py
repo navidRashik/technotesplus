@@ -45,9 +45,7 @@ class TestUser:
             assert response.status_code == 400
 
     # @pytest.mark.django_db
-    def test_search_user_api(
-        self, auth_user, client, user_create_data, user_account_generator
-    ):
+    def test_search_user_api(self, auth_user, client, user_account_generator):
         with TestStep("test check search by name provides data or not"):
             client = auth_user(client, user_account_generator[1])
             response = client.get(

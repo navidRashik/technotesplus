@@ -1,7 +1,10 @@
 import pytest
+from pytest_factoryboy import register
 from rest_framework.test import APIClient
 
 from account_management.tests.factories import UserAccountFactory
+
+register(UserAccountFactory)
 
 
 @pytest.fixture(autouse=True)
@@ -26,8 +29,8 @@ def client() -> APIClient:
 
 @pytest.fixture()
 def auth_user():
-    def _authenticate(client, user_account_factory):
-        client.force_authenticate(user_account_factory)
+    def _authenticate(client, user_account):
+        client.force_authenticate(user_account)
         return client
 
     return _authenticate
@@ -35,8 +38,8 @@ def auth_user():
 
 @pytest.fixture()
 def auth_note_owner():
-    def _authenticate(client, note_factory):
-        auth_user(client, note_factory.created_by)
+    def _authenticate(client, note):
+        auth_user(client, note.created_by)
         return client
 
     return _authenticate
@@ -44,8 +47,8 @@ def auth_note_owner():
 
 @pytest.fixture()
 def auth_private_note_reader():
-    def _authenticate(client, note_factory):
-        auth_user(client, note_factory.shared_with.last())
+    def _authenticate(client, note):
+        auth_user(client, note.shared_with.last())
         return client
 
     return _authenticate

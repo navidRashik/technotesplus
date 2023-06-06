@@ -11,6 +11,8 @@ services:
         volumes:
             - prod_postgres_data:/var/lib/postgresql/data/
         restart: always
+        ports:
+          - "5432:5432"
     web:
         # for prod must use this: gunicorn technotesplus.asgi:application -w 1 -k uvicorn.workers.UvicornWorker -b [::]:8000"
         image: technotes
